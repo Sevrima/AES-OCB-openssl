@@ -66,7 +66,7 @@ int encrypt_aes_ocb(unsigned char *plaintext, unsigned long long plaintext_len, 
     ciphertext_len += len;
 
     /* Get the tag */
-    if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, 14, tag))
+    if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, 16, tag))
         handleErrors();
 
     /* Clean up */
@@ -117,7 +117,7 @@ int decrypt_aes_ocb(unsigned char *ciphertext, unsigned long long ciphertext_len
     }
 
     /* Set expected tag value. Works in OpenSSL 1.0.1d and later */
-    if(!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, 14, tag))
+    if(!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, 16, tag))
         handleErrors();
 
     /* Finalise the decryption. A positive return value indicates success,
