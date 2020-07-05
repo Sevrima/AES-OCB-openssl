@@ -61,86 +61,7 @@ int generate_test_vectors();
 
 int main()
 {
-	// OpenSSL_add_all_algorithms();
-    // ERR_load_crypto_strings();     
-
-    // /* Set up the key and iv. Do I need to say to not hard code these in a real application? :-) */
-
-    // /* A 256 bit key */
-    // static const unsigned char key[] = "01234567890123456789012345678901";
-
-    // /* A 128 bit IV */
-    // static const unsigned char iv[] = "0123456789012345";
-
-    // /* Message to be encrypted */
-    // unsigned char plaintext[] = "The quick brown fox jumps over the lazy dog";
-
-    // /* Some additional data to be authenticated */
-    // static const unsigned char aad[] = "Some AAD data";
-
-    // /* Buffer for ciphertext. Ensure the buffer is long enough for the
-    //  * ciphertext which may be longer than the plaintext, dependant on the
-    //  * algorithm and mode
-    //  */
-    // unsigned char ciphertext[128];
-
-    // /* Buffer for the decrypted text */
-    // unsigned char decryptedtext[128];
-    // /* Buffer for the tag */
-    // unsigned char tag[16];
-
-    // int decryptedtext_len = 0, ciphertext_len = 0;
-
-    // /* Encrypt the plaintext */
-    // ciphertext_len = encrypt_aes_gcm(plaintext, strlen(plaintext), aad, strlen(aad), key, iv, ciphertext, tag);
-
-	// print_bstr("###CT: ", ciphertext, ciphertext_len);
-    // /* Do something useful with the ciphertext here */
-    // printf("Ciphertext is:\n");
-    // BIO_dump_fp(stdout, ciphertext, ciphertext_len);
-    // printf("Tag is:\n");
-    // BIO_dump_fp(stdout, tag, 14);
-
-    // /* Mess with stuff */
-    // /* ciphertext[0] ^= 1; */
-    // /* tag[0] ^= 1; */
-
-    // /* Decrypt the ciphertext */
-    // decryptedtext_len = decrypt_aes_gcm(ciphertext, ciphertext_len, aad, strlen(aad), tag, key, iv, decryptedtext);
-
-    // if(decryptedtext_len < 0)
-    // {
-    //     /* Verify error */
-    //     printf("Decrypted text failed to verify\n");
-    // }
-    // else
-    // {
-    //     /* Add a NULL terminator. We are expecting printable text */
-    //     decryptedtext[decryptedtext_len] = '\0';
-
-    //     /* Show the decrypted text */
-    //     printf("Decrypted text is:\n");
-    //     printf("%s\n", decryptedtext);
-    // }
-
-    // /* Remove error strings */
-    // ERR_free_strings();
-
-    // return 0;
-
-
-
-
-
-
-
 	int ret = generate_test_vectors();
-
-	// if (ret != KAT_SUCCESS) {
-	// 	fprintf(stderr, "test vector generation failed with code %d\n", ret);
-	// }
-
-	// return ret;
 }
 
 int generate_test_vectors()
@@ -198,7 +119,7 @@ int generate_test_vectors()
 			int decryptedtext_len = 0, ciphertext_len = 0;
 
 			/* Encrypt the plaintext */
-			ciphertext_len = encrypt_aes_gcm(msg, sizeof(msg), ad, sizeof(ad), key, nonce, ciphertext, tag);
+			ciphertext_len = encrypt_aes_ocb(msg, sizeof(msg), ad, sizeof(ad), key, nonce, ciphertext, tag);
 
 			//fprint_bstr(fp, "CT= ", ciphertext, ciphertext_len);
 			/* Do something useful with the ciphertext here */
@@ -212,7 +133,7 @@ int generate_test_vectors()
 			/* tag[0] ^= 1; */
 
 			/* Decrypt the ciphertext */
-			decryptedtext_len = decrypt_aes_gcm(ciphertext, ciphertext_len, ad, sizeof(ad), tag, key, nonce, msg2);
+			decryptedtext_len = decrypt_aes_ocb(ciphertext, ciphertext_len, ad, sizeof(ad), tag, key, nonce, msg2);
 			fprint_bstr(fp, "CT = ",ciphertext , ciphertext_len);
 			if(decryptedtext_len < 0)
 			{

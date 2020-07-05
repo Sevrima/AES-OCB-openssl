@@ -4,83 +4,6 @@
 #include <string.h>   
 
 
-// int encrypt_aes_gcm(unsigned char *plaintext, unsigned long long plaintext_len, unsigned char *aad,
-//             unsigned long long aad_len, unsigned char *key, unsigned char *iv,
-//             unsigned char *ciphertext, unsigned char *tag);
-
-// int decrypt_aes_gcm(unsigned char *ciphertext, unsigned long long ciphertext_len, unsigned char *aad,
-//             unsigned long long aad_len, unsigned char *tag, unsigned char *key, unsigned char *iv,
-//             unsigned char *plaintext);
-
-// int main(int arc, char *argv[])
-// {
-//     OpenSSL_add_all_algorithms();
-//     ERR_load_crypto_strings();     
-
-//     /* Set up the key and iv. Do I need to say to not hard code these in a real application? :-) */
-
-//     /* A 256 bit key */
-//     static const unsigned char key[] = "01234567890123456789012345678901";
-
-//     /* A 128 bit IV */
-//     static const unsigned char iv[] = "0123456789012345";
-
-//     /* Message to be encrypted */
-//     unsigned char plaintext[] = "The FUCKING quick brown fox jumps over the lazy dog";
-
-//     /* Some additional data to be authenticated */
-//     static const unsigned char aad[] = "Some AAD data";
-
-//     /* Buffer for ciphertext. Ensure the buffer is long enough for the
-//      * ciphertext which may be longer than the plaintext, dependant on the
-//      * algorithm and mode
-//      */
-//     unsigned char ciphertext[128];
-
-//     /* Buffer for the decrypted text */
-//     unsigned char decryptedtext[128];
-//     /* Buffer for the tag */
-//     unsigned char tag[16];
-
-//     int decryptedtext_len = 0, ciphertext_len = 0;
-
-//     /* Encrypt the plaintext */
-//     ciphertext_len = encrypt_aes_gcm(plaintext, strlen(plaintext), aad, strlen(aad), key, iv, ciphertext, tag);
-
-//     /* Do something useful with the ciphertext here */
-//     printf("Ciphertext is:\n");
-//     BIO_dump_fp(stdout, ciphertext, ciphertext_len);
-//     printf("Tag is:\n");
-//     BIO_dump_fp(stdout, tag, 14);
-
-//     /* Mess with stuff */
-//     /* ciphertext[0] ^= 1; */
-//     /* tag[0] ^= 1; */
-
-//     /* Decrypt the ciphertext */
-//     decryptedtext_len = decrypt_aes_gcm(ciphertext, ciphertext_len, aad, strlen(aad), tag, key, iv, decryptedtext);
-
-//     if(decryptedtext_len < 0)
-//     {
-//         /* Verify error */
-//         printf("Decrypted text failed to verify\n");
-//     }
-//     else
-//     {
-//         /* Add a NULL terminator. We are expecting printable text */
-//         decryptedtext[decryptedtext_len] = '\0';
-
-//         /* Show the decrypted text */
-//         printf("Decrypted text is:\n");
-//         printf("%s\n", decryptedtext);
-//     }
-
-//     /* Remove error strings */
-//     ERR_free_strings();
-
-//     return 0;
-// }
-
 void handleErrors(void)
 {
     unsigned long errCode;
@@ -94,7 +17,7 @@ void handleErrors(void)
     abort();
 }
 
-int encrypt_aes_gcm(unsigned char *plaintext, unsigned long long plaintext_len, unsigned char *aad,
+int encrypt_aes_ocb(unsigned char *plaintext, unsigned long long plaintext_len, unsigned char *aad,
             unsigned long long aad_len, unsigned char *key, unsigned char *iv,
             unsigned char *ciphertext, unsigned char *tag)
 {
@@ -110,7 +33,7 @@ int encrypt_aes_gcm(unsigned char *plaintext, unsigned long long plaintext_len, 
         handleErrors();
 
     /* Set IV length if default 12 bytes (96 bits) is not appropriate */
-    if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, 15, NULL))
+    if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, 14, NULL))
         handleErrors();
 
     /* Initialise key and IV */
@@ -143,7 +66,7 @@ int encrypt_aes_gcm(unsigned char *plaintext, unsigned long long plaintext_len, 
     ciphertext_len += len;
 
     /* Get the tag */
-    if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, 16, tag))
+    if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, 14, tag))
         handleErrors();
 
     /* Clean up */
@@ -152,7 +75,7 @@ int encrypt_aes_gcm(unsigned char *plaintext, unsigned long long plaintext_len, 
     return ciphertext_len;
 }
 
-int decrypt_aes_gcm(unsigned char *ciphertext, unsigned long long ciphertext_len, unsigned char *aad,
+int decrypt_aes_ocb(unsigned char *ciphertext, unsigned long long ciphertext_len, unsigned char *aad,
             unsigned long long aad_len, unsigned char *tag, unsigned char *key, unsigned char *iv,
             unsigned char *plaintext)
 {
@@ -167,7 +90,7 @@ int decrypt_aes_gcm(unsigned char *ciphertext, unsigned long long ciphertext_len
         handleErrors();
 
     /* Set IV length. Not necessary if this is 12 bytes (96 bits) */
-    if(!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, 15, NULL))
+    if(!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, 14, NULL))
         handleErrors();
 
     /* Initialise key and IV */
@@ -194,7 +117,7 @@ int decrypt_aes_gcm(unsigned char *ciphertext, unsigned long long ciphertext_len
     }
 
     /* Set expected tag value. Works in OpenSSL 1.0.1d and later */
-    if(!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, 16, tag))
+    if(!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, 14, tag))
         handleErrors();
 
     /* Finalise the decryption. A positive return value indicates success,
