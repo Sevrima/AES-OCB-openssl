@@ -49,7 +49,7 @@
 #define KAT_CRYPTO_FAILURE  -4
 
 #define MAX_FILE_NAME				256
-#define MAX_MESSAGE_LENGTH			1000
+#define MAX_MESSAGE_LENGTH			32
 #define MAX_ASSOCIATED_DATA_LENGTH	32
 
 void init_buffer(unsigned char *buffer, unsigned long long numbytes);
@@ -80,7 +80,7 @@ int generate_test_vectors()
 	unsigned long long  clen, mlen2;
 	int                 count = 1;
 	int                 func_ret, ret_val = KAT_SUCCESS;
-	//unsigned char tag[16];
+	unsigned char tag[16];
 
 
 	init_buffer(key, sizeof(key));
@@ -95,9 +95,9 @@ int generate_test_vectors()
 		return KAT_FILE_OPEN_ERROR;
 	}
 	
-	// for (unsigned long long mlen = 0; (mlen <= MAX_MESSAGE_LENGTH) && (ret_val == KAT_SUCCESS); mlen++) {
+	for (unsigned long long mlen = 0; (mlen <= MAX_MESSAGE_LENGTH) && (ret_val == KAT_SUCCESS); mlen++) {
 
-	// 	for (unsigned long long adlen = 0; adlen <= MAX_ASSOCIATED_DATA_LENGTH; adlen++) {
+	 	for (unsigned long long adlen = 0; adlen <= MAX_ASSOCIATED_DATA_LENGTH; adlen++) {
 			
 
 			fprintf(fp, "Count = %d\n", count++);
@@ -106,35 +106,24 @@ int generate_test_vectors()
 
 			fprint_bstr(fp, "Nonce = ", nonce, CRYPTO_NPUBBYTES);
 
-			fprint_bstr(fp, "PT = ", msg, sizeof(msg));
+			fprint_bstr(fp, "PT = ", msg, mlen);
 
-			fprint_bstr(fp, "AD = ", ad, sizeof(ad));
-
-			unsigned char ciphertext[128];
+			fprint_bstr(fp, "AD = ", ad, adlen);
 
 			
-			/* Buffer for the tag */
-			unsigned char tag[16];
+			
 
 			int decryptedtext_len = 0, ciphertext_len = 0;
 
 			/* Encrypt the plaintext */
-			ciphertext_len = encrypt_aes_ocb(msg, sizeof(msg), ad, sizeof(ad), key, nonce, ciphertext, tag);
+			ciphertext_len = encrypt_aes_ocb(msg, mlen, ad, adlen, key, nonce, ct, tag);
 
-			//fprint_bstr(fp, "CT= ", ciphertext, ciphertext_len);
-			/* Do something useful with the ciphertext here */
-			printf("Ciphertext is:\n");
-			BIO_dump_fp(stdout, ciphertext, ciphertext_len);
-			printf("Tag is:\n");
-			BIO_dump_fp(stdout, tag, 14);
-
-			/* Mess with stuff */
-			/* ciphertext[0] ^= 1; */
-			/* tag[0] ^= 1; */
-
+			
 			/* Decrypt the ciphertext */
-			decryptedtext_len = decrypt_aes_ocb(ciphertext, ciphertext_len, ad, sizeof(ad), tag, key, nonce, msg2);
-			fprint_bstr(fp, "CT = ",ciphertext , ciphertext_len);
+			decryptedtext_len = decrypt_aes_ocb(ct, ciphertext_len, ad, adlen, tag, key, nonce, msg2);
+			
+			
+			fprint_bstr(fp, "CT = ",ct , ciphertext_len);
 			if(decryptedtext_len < 0)
 			{
 				/* Verify error */
@@ -146,36 +135,22 @@ int generate_test_vectors()
 				msg2[decryptedtext_len] = '\0';
 
 				/* Show the decrypted text */
-				printf("Decrypted text is:\n");
-				printf("%s\n", msg2);
+				//printf("Decrypted text is:\n");
+				//printf("%s\n", decryptedtext);
 			}
 			fprint_bstr(fp, "PT2= ", msg2, decryptedtext_len);
 			fprintf(fp, "\n");
 
-			// ciphertext_len = encrypt_aes_gcm(msg, mlen, ad, adlen, key, nonce, ct, tag);
-
-			// ct[decryptedtext_len] = '\0';
+			
 
 			
-			// fprint_bstr(fp, "CT = ", ct, ciphertext_len);
-			
-			// decryptedtext_len = decrypt_aes_gcm(ct, clen, ad, adlen, tag, key, nonce, msg2);
-			
-			// msg2[decryptedtext_len] = '\0';
-
-			// fprint_bstr(fp, "PT2 = ", msg2, decryptedtext_len);
-			
-			// fprintf(fp, "\n");
-
-			
-	// 	}
-	// }
+	 	}
+	}
 
 	fclose(fp);
 
 	return ret_val;
 }
-
 
 void fprint_bstr(FILE *fp, const char *label, const unsigned char *data, unsigned long long length)
 {    
